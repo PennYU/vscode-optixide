@@ -1,11 +1,16 @@
 import { Webview } from 'vscode';
 
 export class FunctionProvider {
-  constructor(private readonly webview: Webview) {}
+  constructor(
+    private readonly id: string,
+    private readonly webview: Webview
+  ) {}
 
   callFunction(func: string, ...params: any[]) {
     if (func === 'sayHello') {
       this.sayHello(params);
+    } else if (func === 'listProjects') {
+      this.listProjects();
     }
   }
 
@@ -13,7 +18,11 @@ export class FunctionProvider {
     this.reply([{name: `hi! ${name}`}]);
   }
 
-  reply(message: any) {
-    this.webview.postMessage({ target: 'iframe', message });
+  listProjects() {
+    this.reply({ projects: [{name: 'myproject'}] });
+  }
+
+  reply(data: any) {
+    this.webview.postMessage({ target: 'iframe', message: { id: this.id, ...data} });
   }
 }

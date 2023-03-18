@@ -1,4 +1,4 @@
-import { Disposable, Webview, WebviewPanel, window, Uri, ViewColumn, env, commands } from "vscode";
+import * as vscode from "vscode";
 import { getUri } from "../utilities/getUri";
 import { getNonce } from "../utilities/getNonce";
 import { FunctionProvider } from '../function-provider';
@@ -15,8 +15,8 @@ import { FunctionProvider } from '../function-provider';
  */
 export class HelloWorldPanel {
   public static currentPanel: HelloWorldPanel | undefined;
-  private readonly _panel: WebviewPanel;
-  private _disposables: Disposable[] = [];
+  private readonly _panel: vscode.WebviewPanel;
+  private _disposables: vscode.Disposable[] = [];
 
   /**
    * The HelloWorldPanel class private constructor (called only from the render method).
@@ -24,7 +24,7 @@ export class HelloWorldPanel {
    * @param panel A reference to the webview panel
    * @param extensionUri The URI of the directory containing the extension
    */
-  private constructor(panel: WebviewPanel, extensionUri: Uri) {
+  private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
     this._panel = panel;
 
     // Set an event listener to listen for when the panel is disposed (i.e. when the user closes
@@ -52,25 +52,25 @@ export class HelloWorldPanel {
    *
    * @param extensionUri The URI of the directory containing the extension.
    */
-  public static render(extensionUri: Uri) {
+  public static render(extensionUri: vscode.Uri) {
     if (HelloWorldPanel.currentPanel) {
       // If the webview panel already exists reveal it
-      HelloWorldPanel.currentPanel._panel.reveal(ViewColumn.One);
+      HelloWorldPanel.currentPanel._panel.reveal(vscode.ViewColumn.One);
     } else {
       // If a webview panel does not already exist create and show a new one
-      const panel = window.createWebviewPanel(
+      const panel = vscode.window.createWebviewPanel(
         // Panel view type
         "showHelloWorld",
         // Panel title
         "Hello World",
         // The editor column the panel should be displayed in
-        ViewColumn.One,
+        vscode.ViewColumn.One,
         // Extra panel configurations
         {
           // Enable JavaScript in the webview
           enableScripts: true,
           // Restrict the webview to only load resources from the `out` and `webview-ui/build` directories
-          localResourceRoots: [Uri.joinPath(extensionUri, "out"), Uri.joinPath(extensionUri, "assets")],
+          localResourceRoots: [vscode.Uri.joinPath(extensionUri, "out"), vscode.Uri.joinPath(extensionUri, "assets")],
           retainContextWhenHidden: true,
         }
       );
@@ -97,6 +97,13 @@ export class HelloWorldPanel {
     }
   }
 
+  getTheme() {
+    const workbench = vscode.workspace.getConfiguration('workbench') || {};
+    return (workbench.colorTheme || '').toLowerCase().includes('light')
+      ? 'light'
+      : 'dark';
+  }
+
   /**
    * Defines and returns the HTML that should be rendered within the webview panel.
    *
@@ -108,14 +115,15 @@ export class HelloWorldPanel {
    * @returns A template string literal containing the HTML that should be
    * rendered within the webview panel
    */
-  private _getWebviewContent(webview: Webview, extensionUri: Uri) {
+  private _getWebviewContent(webview: vscode.Webview, extensionUri: vscode.Uri) {
     // The CSS file from the Vue build output
     const stylesUri = getUri(webview, extensionUri, ["assets", "main.css"]);
     // The JS file from the Vue build output
     const scriptUri = getUri(webview, extensionUri, ["assets", "main.js"]);
 
     const nonce = getNonce();
-    const iframeId = `optixide-${env.sessionId}`;
+    const theme = this.getTheme();
+    const iframeId = `optixide-${vscode.env.sessionId}`;
     // Tip: Install the es6-string-html VS Code extension to enable code highlighting below
     return /*html*/ `
       <!DOCTYPE html>
@@ -146,7 +154,7 @@ export class HelloWorldPanel {
               }
             };
           </script>
-          <iframe id="${iframeId}" src="http://localhost:3000"
+          <iframe id="${iframeId}" src="http://localhost:3000?theme=${theme}"
                 width="100%"
                 height="100%"
                 frameborder="0"
@@ -163,29 +171,30 @@ export class HelloWorldPanel {
    * @param webview A reference to the extension webview
    * @param context A reference to the extension context
    */
-  private _setWebviewMessageListener(webview: Webview) {
+  private _setWebviewMessageListener(webview: vscode.Webview) {
     webview.onDidReceiveMessage(
       (message: any) => {
+        const id = message.id;
         const action = message.action;
         const name = message.name;
         const params = message.parameters || [];
         if (!action) {
-          window.showErrorMessage('no action.');
+          vscode.window.showErrorMessage('no action.');
           return;
         }
 
         if (!name) {
-          window.showErrorMessage('no name.');
+          vscode.window.showErrorMessage('no name.');
           return;
         }
         
         if (action === 'executeCommand') {
-          commands.executeCommand(name, ...params);
+          vscode.commands.executeCommand(name, ...params);
         } else if (action === 'callFunction') {
-          const provider = new FunctionProvider(webview);
+          const provider = new FunctionProvider(id, webview);
           provider.callFunction(name, ...params);
         } else {
-          window.showErrorMessage('unknown action: ' + action);
+          vscode.window.showErrorMessage('unknown action: ' + action);
         }
       },
       undefined,

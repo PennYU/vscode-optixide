@@ -2,6 +2,9 @@
   <main>
     <el-container style="height: 100vh;">
       <el-aside width="64px">
+        <navbar-item to="home" label="Home" />
+
+
         <el-row>
           <router-link to="home">
             <el-icon><location /></el-icon>
@@ -26,11 +29,21 @@
   </main>
 </template>
 <script lang="ts">
+import { useDark, useToggle } from '@vueuse/core'
+import NavbarItem from '@/components/NavbarItem.vue';
 export default {
+  components: {NavbarItem},
   mounted() {
     window.onmessage = function(e) {
       console.log('works', e);
     };
+  },
+  created() {
+    console.log("theme", this.$route, this.$route.query, this.$route.query.theme)
+    const isDark = useDark()
+    const toggleDark = useToggle(isDark)
+    toggleDark();
+    console.log('useDark')
   }
 }
 </script>
@@ -42,6 +55,7 @@ main {
   justify-content: center;
   align-items: flex-start;
   height: 100%;
+  color: greenyellow
 }
 
 main > * {
