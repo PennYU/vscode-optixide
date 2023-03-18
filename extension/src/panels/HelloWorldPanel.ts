@@ -1,6 +1,7 @@
 import { Disposable, Webview, WebviewPanel, window, Uri, ViewColumn, env, commands } from "vscode";
 import { getUri } from "../utilities/getUri";
 import { getNonce } from "../utilities/getNonce";
+import { FunctionProvider } from '../function-provider';
 
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
@@ -165,12 +166,26 @@ export class HelloWorldPanel {
   private _setWebviewMessageListener(webview: Webview) {
     webview.onDidReceiveMessage(
       (message: any) => {
-        const command = message.command;
+        const action = message.action;
+        const name = message.name;
         const params = message.parameters || [];
-        if (command) {
-          commands.executeCommand(command, ...params);
+        if (!action) {
+          window.showErrorMessage('no action.');
+          return;
+        }
+
+        if (!name) {
+          window.showErrorMessage('no name.');
+          return;
+        }
+        
+        if (action === 'executeCommand') {
+          commands.executeCommand(name, ...params);
+        } else if (action === 'callFunction') {
+          const provider = new FunctionProvider(webview);
+          provider.callFunction(name, ...params);
         } else {
-          window.showErrorMessage('command not found: ' + command);
+          window.showErrorMessage('unknown action: ' + action);
         }
       },
       undefined,
