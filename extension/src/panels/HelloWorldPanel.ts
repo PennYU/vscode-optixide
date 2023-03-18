@@ -1,4 +1,4 @@
-import { Disposable, Webview, WebviewPanel, window, Uri, ViewColumn } from "vscode";
+import { Disposable, Webview, WebviewPanel, window, Uri, ViewColumn, env, commands } from "vscode";
 import { getUri } from "../utilities/getUri";
 import { getNonce } from "../utilities/getNonce";
 
@@ -35,6 +35,14 @@ export class HelloWorldPanel {
 
     // Set an event listener to listen for messages passed from the webview context
     this._setWebviewMessageListener(this._panel.webview);
+    setTimeout(() => {
+      panel.webview.postMessage({
+        target: 'iframe',
+        message: {
+          event: 'loaded',
+        }
+      })
+    }, 1500)
   }
 
   /**
@@ -61,7 +69,8 @@ export class HelloWorldPanel {
           // Enable JavaScript in the webview
           enableScripts: true,
           // Restrict the webview to only load resources from the `out` and `webview-ui/build` directories
-          localResourceRoots: [Uri.joinPath(extensionUri, "out"), Uri.joinPath(extensionUri, "webview-ui/build")],
+          localResourceRoots: [Uri.joinPath(extensionUri, "out"), Uri.joinPath(extensionUri, "assets")],
+          retainContextWhenHidden: true,
         }
       );
 
@@ -100,12 +109,12 @@ export class HelloWorldPanel {
    */
   private _getWebviewContent(webview: Webview, extensionUri: Uri) {
     // The CSS file from the Vue build output
-    const stylesUri = getUri(webview, extensionUri, ["webview-ui", "build", "assets", "index.css"]);
+    const stylesUri = getUri(webview, extensionUri, ["assets", "main.css"]);
     // The JS file from the Vue build output
-    const scriptUri = getUri(webview, extensionUri, ["webview-ui", "build", "assets", "index.js"]);
+    const scriptUri = getUri(webview, extensionUri, ["assets", "main.js"]);
 
     const nonce = getNonce();
-
+    const iframeId = `optixide-${env.sessionId}`;
     // Tip: Install the es6-string-html VS Code extension to enable code highlighting below
     return /*html*/ `
       <!DOCTYPE html>
@@ -113,14 +122,35 @@ export class HelloWorldPanel {
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
           <link rel="stylesheet" type="text/css" href="${stylesUri}">
           <title>Hello World</title>
         </head>
         <body>
           <div id="app"></div>
           <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
-        </body>
+          <script>
+            function execCommand(data) {
+              document.getElementById('${iframeId}').contentWindow.postMessage(data, '*');
+            }
+            const vscode = acquireVsCodeApi();
+            window.onmessage = function(e) {
+              console.log('message', e);
+              if (!e.data) {
+                return;
+              }
+              if (e.data.target === 'vscode') {
+                vscode.postMessage(e.data.message);
+              } else if (e.data.target === 'iframe') {
+                execCommand(e.data.message);
+              }
+            };
+          </script>
+          <iframe id="${iframeId}" src="http://localhost:3000"
+                width="100%"
+                height="100%"
+                frameborder="0"
+                style="border: 0; left: 0; right: 0; bottom: 0; top: 0; position:absolute;" />
+            </body>
       </html>
     `;
   }
@@ -136,15 +166,11 @@ export class HelloWorldPanel {
     webview.onDidReceiveMessage(
       (message: any) => {
         const command = message.command;
-        const text = message.text;
-
-        switch (command) {
-          case "hello":
-            // Code that should run in response to the hello message command
-            window.showInformationMessage(text);
-            return;
-          // Add more switch case statements here as more webview message commands
-          // are created within the webview context (i.e. inside media/main.js)
+        const params = message.parameters || [];
+        if (command) {
+          commands.executeCommand(command, ...params);
+        } else {
+          window.showErrorMessage('command not found: ' + command);
         }
       },
       undefined,

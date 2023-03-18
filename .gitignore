@@ -91,3 +91,4 @@ sw.*
 
 # lock file
 package-lock.json
+*/out

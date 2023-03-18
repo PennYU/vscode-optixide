@@ -2,6 +2,9 @@
 import { provideVSCodeDesignSystem, vsCodeButton } from "@vscode/webview-ui-toolkit";
 import { vscode } from "./utilities/vscode";
 
+import Home from '@/views/Home.vue';
+import { def } from "@vue/shared";
+
 // In order to use the Webview UI Toolkit web components they
 // must be registered with the browser (i.e. webview) using the
 // syntax below.
@@ -31,10 +34,40 @@ function handleHowdyClick() {
 
 <template>
   <main>
-    <h1>Hello world!</h1>
-    <vscode-button @click="handleHowdyClick">Howdy!</vscode-button>
+    <el-container style="height: 100vh;">
+      <el-aside width="64px">
+        <el-row>
+          <router-link to="home">
+            <el-icon><location /></el-icon>
+            <div>Home</div> 
+          </router-link>
+        </el-row>
+        <el-row>
+          <router-link to="projects">
+            <el-icon><location /></el-icon>
+            <div>Project</div> 
+          </router-link>
+        </el-row>
+      </el-aside>
+      <el-container>
+        <el-header>Header</el-header>
+        <el-main>
+          <router-view/>
+        </el-main>
+        <el-footer>Footer</el-footer>
+      </el-container>
+    </el-container>
   </main>
 </template>
+<script lang="ts">
+export default {
+  mounted() {
+    window.onmessage = function(e) {
+      console.log('works', e);
+    };
+  }
+}
+</script>
 
 <style>
 main {
@@ -47,5 +80,9 @@ main {
 
 main > * {
   margin: 1rem 0;
+}
+
+.no-margin {
+  margin: 0
 }
 </style>
