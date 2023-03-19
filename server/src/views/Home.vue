@@ -1,55 +1,107 @@
-<script setup lang="ts">
-import { 
-  provideVSCodeDesignSystem,
-  vsCodeButton,
-  vsCodePanels,
-  vsCodePanelTab,
-  vsCodePanelView
-} from "@vscode/webview-ui-toolkit";
-import { vscode } from "../utilities/vscode";
-
-// In order to use the Webview UI Toolkit web components they
-// must be registered with the browser (i.e. webview) using the
-// syntax below.
-provideVSCodeDesignSystem().register(
-  vsCodeButton(),
-  vsCodePanels(),
-  vsCodePanelTab(),
-  vsCodePanelView()
-);
-
-// To register more toolkit components, simply import the component
-// registration function and call it from within the register
-// function, like so:
-//
-// provideVSCodeDesignSystem().register(
-//   vsCodeButton(),
-//   vsCodeCheckbox()
-// );
-//
-// Finally, if you would like to register all of the toolkit
-// components at once, there's a handy convenience function:
-//
-// provideVSCodeDesignSystem().register(allComponents.register());
-
-function handleHowdyClick() {
-  vscode.postMessage({
-    command: "hello",
-    text: "Hey there partner! 🤠",
-  });
-}
-</script>
+<template>
+  <div>
+    <h1>欢迎使用</h1>
+    <el-row>
+      <el-col :span="16">
+        <div>
+        <img
+          style="width: 100%; height: 200px;"
+          src="https://upload.wikimedia.org/wikipedia/commons/9/9a/Visual_Studio_Code_1.35_icon.svg"/>
+        </div>
+      </el-col>
+      <el-col :span="8">
+        <el-row>
+          <el-button class="button">Create Project</el-button>
+        </el-row>
+        <el-row>
+          <el-button class="button">Open Project</el-button>
+        </el-row>
+        <el-row>
+          <el-button class="button">Create Terminal</el-button>
+        </el-row>
+        <el-row>
+          <el-button class="button">Open Terminal</el-button>
+        </el-row>
+      </el-col>
+    </el-row>
+    <el-row>
+      <el-divider>Recent Projects</el-divider>
+      <el-table :data="projects" style="width: 100%">
+        <el-table-column prop="date" label="Date" width="180" />
+        <el-table-column prop="name" label="Name" width="180" />
+        <el-table-column prop="address" label="Address" />
+      </el-table>
+    </el-row>
+    <el-row>
+      <el-divider>Quick Start</el-divider>
+    </el-row>
+    <el-row>
+      <el-col :span="8">
+        <div class="card">
+          <el-card>
+            <img
+          style="width: 100%; height: 50px;"
+          src="https://upload.wikimedia.org/wikipedia/commons/9/9a/Visual_Studio_Code_1.35_icon.svg"/>
+            <h3>step 1</h3>
+          </el-card>
+        </div>
+      </el-col>
+      <el-col :span="8">
+        <div class="card">
+          <el-card>
+            <img
+          style="width: 100%; height: 50px;"
+          src="https://upload.wikimedia.org/wikipedia/commons/9/9a/Visual_Studio_Code_1.35_icon.svg"/>
+            <h3>step 2</h3>
+          </el-card>
+        </div>
+      </el-col>
+      <el-col :span="8">
+        <div class="card">
+          <el-card>
+            <img
+          style="width: 100%; height: 50px;"
+          src="https://upload.wikimedia.org/wikipedia/commons/9/9a/Visual_Studio_Code_1.35_icon.svg"/>
+            <h3>step 3</h3>
+          </el-card>
+        </div>
+      </el-col>
+    </el-row>
+  </div>
+</template>
 
 <script lang="ts">
 import PopupModal from '../components/PopupModal.vue'
 
 export default {
-    name: 'ConfirmDialogue',
+    name: 'Home',
 
     components: { PopupModal },
 
     data: () => ({
-        showDialog: false,
+      showDialog: false,
+      projects: [
+        {
+          date: '2016-05-03',
+          name: 'Tom',
+          address: 'No. 189, Grove St, Los Angeles',
+        },
+        {
+          date: '2016-05-02',
+          name: 'Tom',
+          address: 'No. 189, Grove St, Los Angeles',
+        },
+        {
+          date: '2016-05-04',
+          name: 'Tom',
+          address: 'No. 189, Grove St, Los Angeles',
+        },
+        {
+          date: '2016-05-01',
+          name: 'Tom',
+          address: 'No. 189, Grove St, Los Angeles',
+        },
+      ]
     }),
 
     methods: {
@@ -60,55 +112,13 @@ export default {
 }
 </script>
 
-<template>
-  <main>
-    <h1>Hello world home!</h1>
-    <vscode-button @click="handleHowdyClick">Howdy!</vscode-button>
-    <button @click="show">点我</button>
-    <popup-modal v-model:is-visible="showDialog">
-        <h2 style="margin-top: 0">hahahaha</h2>
-    </popup-modal>
-  </main>
-</template>
-
 <style>
-main {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-  height: 100%;
+.button {
+  width: 250px;
+  height: 40px;
+  margin-bottom: 10px;
 }
-
-main > * {
-  margin: 1rem 0;
-}
-
-/* Add a black background color to the top navigation */
-.topnav {
-  background-color: #333;
-  overflow: hidden;
-}
-
-/* Style the links inside the navigation bar */
-.topnav a {
-  float: left;
-  color: #f2f2f2;
-  text-align: center;
-  padding: 14px 16px;
-  text-decoration: none;
-  font-size: 17px;
-}
-
-/* Change the color of links on hover */
-.topnav a:hover {
-  background-color: #ddd;
-  color: black;
-}
-
-/* Add a color to the active/current link */
-.topnav a.active {
-  background-color: #04AA6D;
-  color: white;
+.card {
+  margin: 20px;
 }
 </style>
