@@ -4,12 +4,9 @@
       <el-aside class="navbar">
         <el-menu
           style="--el-menu-level:-1; width: 64px; margin: 0; padding: 0;"
-            active-text-color="#ffd04b"
-            background-color="#545c64"
             class="el-menu-vertical-demo"
             default-active="/home"
-            text-color="#fff"
-            router="true"
+            @select="onSelect"
           >
           <el-menu-item index="/home" class="navbar-menu-item">
             <div class="navbar-item-box">
@@ -39,7 +36,6 @@
   </main>
 </template>
 <script lang="ts">
-import { useDark, useToggle } from '@vueuse/core'
 import NavbarItem from '@/components/NavbarItem.vue';
 export default {
   components: {NavbarItem},
@@ -47,12 +43,18 @@ export default {
     window.onmessage = function(e) {
       console.log('works', e);
     };
-  },
-  created() {
     console.log("theme", this.$route, this.$route.query, this.$route.query.theme)
-    const isDark = useDark()
-    const toggleDark = useToggle(isDark)
-    // toggleDark();
+  },
+  methods: {
+    onSelect(index: string) {
+      if (index === this.$route.path) {
+        return;
+      }
+      this.$router.push({path: index, query: this.$route.query});
+    },
+    isDark() {
+      return this.$route.query.theme === 'dark'
+    }
   }
 }
 </script>
@@ -72,7 +74,6 @@ main > * {
 .navbar {
   width: 64px;
   height: 100vh;
-  background-color: antiquewhite;
 }
 .footer {
   display: flex;
